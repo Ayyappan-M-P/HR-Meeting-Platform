@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* '@tailwind components' removed — Tailwind v4 consolidates styles into '@tailwind utilities' */
+@tailwind utilities;

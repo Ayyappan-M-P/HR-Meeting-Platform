@@ -127,6 +127,8 @@ using HRInterview.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -211,6 +213,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
 }
+
+app.UseWebSockets();
 
 app.UseCors("AllowAll");
 

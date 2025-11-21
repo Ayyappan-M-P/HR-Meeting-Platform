@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HRInterview.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0e42634d5c3a482d5de9dda696e4353365ed235d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+627434853bb56b9ac0d1f87761045a37f6b96db9")]
 [assembly: System.Reflection.AssemblyProductAttribute("HRInterview.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HRInterview.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

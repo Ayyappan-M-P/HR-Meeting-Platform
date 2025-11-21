@@ -33,6 +33,9 @@ C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\MimeKi
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Mono.TextTemplating.dll
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Npgsql.dll
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\System.CodeDom.dll
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\System.Composition.AttributedModel.dll
 C:\Users\user\Desktop\Hr-Meeting\backend\HRInterview.API\bin\Debug\net9.0\System.Composition.Convention.dll

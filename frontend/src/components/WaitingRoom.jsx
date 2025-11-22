@@ -668,42 +668,80 @@ const WaitingRoom = ({ userRole, interviewId, candidateEmail, candidateName, onA
     }
   };
 
-  // HR: Admit candidate
-  const handleAdmit = async (candidate) => {
-    try {
-      const token = localStorage.getItem('token');
-      console.log('[DEBUG] Admitting candidate:', candidate);
+  // // HR: Admit candidate
+  // const handleAdmit = async (candidate) => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     console.log('[DEBUG] Admitting candidate:', candidate);
       
-      const response = await fetch('http://localhost:5196/api/waiting-room/admit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          interviewId: interviewId,
-          candidateEmail: candidate.candidateEmail
-        })
-      });
+  //     const response = await fetch('http://localhost:5196/api/waiting-room/admit', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       body: JSON.stringify({
+  //         interviewId: interviewId,
+  //         candidateEmail: candidate.candidateEmail
+  //       })
+  //     });
 
-      const data = await response.json();
-      console.log('[DEBUG] Admit response:', data);
+  //     const data = await response.json();
+  //     console.log('[DEBUG] Admit response:', data);
 
-      if (response.ok) {
-        console.log('[SUCCESS] Candidate admitted successfully');
-        setCandidates(candidates.filter(c => c.candidateEmail !== candidate.candidateEmail));
+  //     if (response.ok) {
+  //       console.log('[SUCCESS] Candidate admitted successfully');
+  //       setCandidates(candidates.filter(c => c.candidateEmail !== candidate.candidateEmail));
         
-        if (onAdmitted) {
-          onAdmitted(candidate);
-        }
-      } else {
-        alert(data.message || 'Failed to admit candidate');
+  //       if (onAdmitted) {
+  //         onAdmitted(candidate);
+  //       }
+  //     } else {
+  //       alert(data.message || 'Failed to admit candidate');
+  //     }
+  //   } catch (error) {
+  //     console.error('[ERROR] Failed to admit candidate:', error);
+  //     alert('Failed to admit candidate. Please try again.');
+  //   }
+  // };
+
+  // In WaitingRoom.jsx - Update handleAdmit function
+const handleAdmit = async (candidate) => {
+  try {
+    const token = localStorage.getItem('token');
+    console.log('[WaitingRoom] Admitting candidate:', candidate);
+    
+    const response = await fetch('http://localhost:5196/api/waiting-room/admit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        interviewId: interviewId,
+        candidateEmail: candidate.candidateEmail
+      })
+    });
+
+    const data = await response.json();
+    console.log('[WaitingRoom] Admit response:', data);
+
+    if (response.ok) {
+      console.log('[WaitingRoom] Candidate admitted successfully');
+      setCandidates(candidates.filter(c => c.candidateEmail !== candidate.candidateEmail));
+      
+      // ✅ HR also transitions to meeting room
+      if (onAdmitted) {
+        onAdmitted(candidate);
       }
-    } catch (error) {
-      console.error('[ERROR] Failed to admit candidate:', error);
-      alert('Failed to admit candidate. Please try again.');
+    } else {
+      alert(data.message || 'Failed to admit candidate');
     }
-  };
+  } catch (error) {
+    console.error('[WaitingRoom] Failed to admit candidate:', error);
+    alert('Failed to admit candidate. Please try again.');
+  }
+};
 
   const getWaitTime = (joinedAt) => {
     const diff = Date.now() - new Date(joinedAt).getTime();

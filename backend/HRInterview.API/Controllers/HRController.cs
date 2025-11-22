@@ -678,6 +678,45 @@ private string GenerateMeetingId()
             });
         }
 
+        // ✅ ADD THIS METHOD
+        [HttpPut("interviews/{interviewId}/complete")]
+        public async Task<ActionResult<ApiResponseDto>> CompleteInterview(int interviewId)
+        {
+            try
+            {
+                var interview = await _context.Interviews.FindAsync(interviewId);
+                
+                if (interview == null)
+                {
+                    return NotFound(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Interview not found"
+                    });
+                }
+
+                interview.Status = "Completed";
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"[HR] Interview {interviewId} marked as completed");
+
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Interview completed successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HR] Error completing interview: {ex.Message}");
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = "Failed to complete interview"
+                });
+            }
+        }
+
         [HttpPost("scorecard/save")]
         public async Task<ActionResult<ApiResponseDto>> SaveScorecard([FromBody] ScorecardDto dto)
         {

@@ -123,9 +123,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using HRInterview.API.Data;
 using HRInterview.API.Services;
+using HRInterview.API.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -202,6 +205,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -212,11 +217,28 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
+// ✅ CRITICAL ORDER - WebSockets MUST be first
+app.UseWebSockets(new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(120)
+});
+
+// ✅ Add middleware BEFORE routing
+app.UseMiddleware<WebSocketMiddleware>();
+
+app.UseWebSockets();
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+Console.WriteLine("==============================================");
+Console.WriteLine("🚀 HR Interview Platform API Started");
+Console.WriteLine("📡 WebSocket: ws://localhost:5196/ws/signaling");
+Console.WriteLine("🌐 HTTP: http://localhost:5196");
+Console.WriteLine("==============================================");
 
 app.Run();

@@ -945,118 +945,234 @@ namespace HRInterview.API.Controllers
             }
         }
 
-        // Candidate Login - Uses email and meeting ID
-        [HttpPost("candidate/login")]
-        public async Task<ActionResult<CandidateAuthResponseDto>> CandidateLogin([FromBody] CandidateLoginDto dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiResponseDto
-                {
-                    Success = false,
-                    Message = "Invalid input",
-                    Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-                });
-            }
+        // // Candidate Login - Uses email and meeting ID
+        // [HttpPost("candidate/login")]
+        // public async Task<ActionResult<CandidateAuthResponseDto>> CandidateLogin([FromBody] CandidateLoginDto dto)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return BadRequest(new ApiResponseDto
+        //         {
+        //             Success = false,
+        //             Message = "Invalid input",
+        //             Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
+        //         });
+        //     }
 
-            try
-            {
-                Console.WriteLine($"[DEBUG] Candidate login attempt - Email: {dto.Email}, MeetingId: {dto.MeetingId}");
+        //     try
+        //     {
+        //         Console.WriteLine($"[DEBUG] Candidate login attempt - Email: {dto.Email}, MeetingId: {dto.MeetingId}");
 
-                // Find interview by meeting ID and candidate email
-                var interview = await _context.Interviews
-                    .Include(i => i.HR)
-                    .FirstOrDefaultAsync(i => 
-                        i.MeetingLink.EndsWith(dto.MeetingId) && 
-                        i.CandidateEmail.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
+        //         // Find interview by meeting ID and candidate email
+        //         var interview = await _context.Interviews
+        //             .Include(i => i.HR)
+        //             .FirstOrDefaultAsync(i => 
+        //                 i.MeetingLink.EndsWith(dto.MeetingId) && 
+        //                 i.CandidateEmail.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
 
-                if (interview == null)
-                {
-                    Console.WriteLine($"[ERROR] Interview not found for MeetingId: {dto.MeetingId}, Email: {dto.Email}");
+        //         if (interview == null)
+        //         {
+        //             Console.WriteLine($"[ERROR] Interview not found for MeetingId: {dto.MeetingId}, Email: {dto.Email}");
 
-                    return Unauthorized(new ApiResponseDto
-                    {
-                        Success = false,
-                        Message = "Invalid meeting ID or email. Please check your invitation and ensure both match exactly."
-                    });
-                }
+        //             return Unauthorized(new ApiResponseDto
+        //             {
+        //                 Success = false,
+        //                 Message = "Invalid meeting ID or email. Please check your invitation and ensure both match exactly."
+        //             });
+        //         }
 
-                Console.WriteLine($"[DEBUG] Interview found - ID: {interview.Id}, Status: {interview.Status}");
+        //         Console.WriteLine($"[DEBUG] Interview found - ID: {interview.Id}, Status: {interview.Status}");
 
-                // Check if interview is completed
-                if (interview.Status == "Completed")
-                {
-                    return BadRequest(new ApiResponseDto
-                    {
-                        Success = false,
-                        Message = "This interview has already been completed."
-                    });
-                }
+        //         // Check if interview is completed
+        //         if (interview.Status == "Completed")
+        //         {
+        //             return BadRequest(new ApiResponseDto
+        //             {
+        //                 Success = false,
+        //                 Message = "This interview has already been completed."
+        //             });
+        //         }
 
-                // Create or get candidate record
-                var candidate = await _context.Candidates
-                    .FirstOrDefaultAsync(c => c.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
+        //         // Create or get candidate record
+        //         var candidate = await _context.Candidates
+        //             .FirstOrDefaultAsync(c => c.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
 
-                if (candidate == null)
-                {
-                    Console.WriteLine($"[DEBUG] Creating new candidate: {dto.Email}");
-                    candidate = new Candidate
-                    {
-                        Email = dto.Email,
-                        Name = dto.Name ?? dto.Email.Split('@')[0],
-                        ResumeUrl = dto.ResumeUrl,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.Candidates.Add(candidate);
-                    await _context.SaveChangesAsync();
-                    Console.WriteLine($"[DEBUG] Candidate created with ID: {candidate.Id}");
-                }
-                else
-                {
-                    Console.WriteLine($"[DEBUG] Existing candidate found: {candidate.Id}");
-                }
+        //         if (candidate == null)
+        //         {
+        //             Console.WriteLine($"[DEBUG] Creating new candidate: {dto.Email}");
+        //             candidate = new Candidate
+        //             {
+        //                 Email = dto.Email,
+        //                 Name = dto.Name ?? dto.Email.Split('@')[0],
+        //                 ResumeUrl = dto.ResumeUrl,
+        //                 CreatedAt = DateTime.UtcNow
+        //             };
+        //             _context.Candidates.Add(candidate);
+        //             await _context.SaveChangesAsync();
+        //             Console.WriteLine($"[DEBUG] Candidate created with ID: {candidate.Id}");
+        //         }
+        //         else
+        //         {
+        //             Console.WriteLine($"[DEBUG] Existing candidate found: {candidate.Id}");
+        //         }
 
-                // Generate token for candidate
-                var token = _jwtService.GenerateToken(candidate.Id, candidate.Email, "Candidate");
+        //         // Generate token for candidate
+        //         var token = _jwtService.GenerateToken(candidate.Id, candidate.Email, "Candidate");
 
-                Console.WriteLine($"[DEBUG] Token generated successfully for candidate: {candidate.Email}");
+        //         Console.WriteLine($"[DEBUG] Token generated successfully for candidate: {candidate.Email}");
 
-                return Ok(new CandidateAuthResponseDto
-                {
-                    Token = token,
-                    Candidate = new CandidateDto
-                    {
-                        Id = candidate.Id,
-                        Name = candidate.Name,
-                        Email = candidate.Email,
-                        Role = "Candidate"
-                    },
-                    Interview = new InterviewResponseDto
-                    {
-                        Id = interview.Id,
-                        CandidateEmail = interview.CandidateEmail,
-                        MeetingLink = interview.MeetingLink,
-                        ScheduledAt = interview.ScheduledAt,
-                        Status = interview.Status,
-                        CreatedAt = interview.CreatedAt,
-                        AlertCount = 0,
-                        HasScorecard = false
-                    },
-                    HRName = interview.HR?.Name ?? "HR Manager"
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] Candidate Login failed: {ex.Message}");
-                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+        //         return Ok(new CandidateAuthResponseDto
+        //         {
+        //             Token = token,
+        //             Candidate = new CandidateDto
+        //             {
+        //                 Id = candidate.Id,
+        //                 Name = candidate.Name,
+        //                 Email = candidate.Email,
+        //                 Role = "Candidate"
+        //             },
+        //             Interview = new InterviewResponseDto
+        //             {
+        //                 Id = interview.Id,
+        //                 CandidateEmail = interview.CandidateEmail,
+        //                 MeetingLink = interview.MeetingLink,
+        //                 ScheduledAt = interview.ScheduledAt,
+        //                 Status = interview.Status,
+        //                 CreatedAt = interview.CreatedAt,
+        //                 AlertCount = 0,
+        //                 HasScorecard = false
+        //             },
+        //             HRName = interview.HR?.Name ?? "HR Manager"
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"[ERROR] Candidate Login failed: {ex.Message}");
+        //         Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
                 
-                return StatusCode(500, new ApiResponseDto
-                {
-                    Success = false,
-                    Message = "An error occurred during login. Please try again."
-                });
-            }
+        //         return StatusCode(500, new ApiResponseDto
+        //         {
+        //             Success = false,
+        //             Message = "An error occurred during login. Please try again."
+        //         });
+        //     }
+        // }
+
+        
+        // Replace the CandidateLogin method in AuthController.cs (around line 96-200)
+[HttpPost("candidate/login")]
+public async Task<ActionResult<CandidateAuthResponseDto>> CandidateLogin([FromBody] CandidateLoginDto dto)
+{
+    if (!ModelState.IsValid)
+    {
+        return BadRequest(new ApiResponseDto
+        {
+            Success = false,
+            Message = "Invalid input",
+            Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
+        });
+    }
+
+    try
+    {
+        Console.WriteLine($"[DEBUG] Candidate login attempt - Email: {dto.Email}, MeetingId: {dto.MeetingId}");
+
+        // FIXED: Use ToLower() instead of StringComparison for EF Core compatibility
+        var normalizedEmail = dto.Email.ToLower();
+        var interview = await _context.Interviews
+            .Include(i => i.HR)
+            .FirstOrDefaultAsync(i => 
+                i.MeetingLink.EndsWith(dto.MeetingId) && 
+                i.CandidateEmail.ToLower() == normalizedEmail);
+
+        if (interview == null)
+        {
+            Console.WriteLine($"[ERROR] Interview not found for MeetingId: {dto.MeetingId}, Email: {dto.Email}");
+
+            return Unauthorized(new ApiResponseDto
+            {
+                Success = false,
+                Message = "Invalid meeting ID or email. Please check your invitation and ensure both match exactly."
+            });
         }
+
+        Console.WriteLine($"[DEBUG] Interview found - ID: {interview.Id}, Status: {interview.Status}");
+
+        // Check if interview is completed
+        if (interview.Status == "Completed")
+        {
+            return BadRequest(new ApiResponseDto
+            {
+                Success = false,
+                Message = "This interview has already been completed."
+            });
+        }
+
+        // Create or get candidate record - FIXED: Use ToLower() for comparison
+        var candidate = await _context.Candidates
+            .FirstOrDefaultAsync(c => c.Email.ToLower() == normalizedEmail);
+
+        if (candidate == null)
+        {
+            Console.WriteLine($"[DEBUG] Creating new candidate: {dto.Email}");
+            candidate = new Candidate
+            {
+                Email = dto.Email,
+                Name = dto.Name ?? dto.Email.Split('@')[0],
+                ResumeUrl = dto.ResumeUrl,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Candidates.Add(candidate);
+            await _context.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] Candidate created with ID: {candidate.Id}");
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] Existing candidate found: {candidate.Id}");
+        }
+
+        // Generate token for candidate
+        var token = _jwtService.GenerateToken(candidate.Id, candidate.Email, "Candidate");
+
+        Console.WriteLine($"[DEBUG] Token generated successfully for candidate: {candidate.Email}");
+
+        return Ok(new CandidateAuthResponseDto
+        {
+            Token = token,
+            Candidate = new CandidateDto
+            {
+                Id = candidate.Id,
+                Name = candidate.Name,
+                Email = candidate.Email,
+                Role = "Candidate"
+            },
+            Interview = new InterviewResponseDto
+            {
+                Id = interview.Id,
+                CandidateEmail = interview.CandidateEmail,
+                MeetingLink = interview.MeetingLink,
+                ScheduledAt = interview.ScheduledAt,
+                Status = interview.Status,
+                CreatedAt = interview.CreatedAt,
+                AlertCount = 0,
+                HasScorecard = false
+            },
+            HRName = interview.HR?.Name ?? "HR Manager"
+        });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] Candidate Login failed: {ex.Message}");
+        Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+        
+        return StatusCode(500, new ApiResponseDto
+        {
+            Success = false,
+            Message = "An error occurred during login. Please try again."
+        });
+    }
+}
+
 
         // Get all available HR accounts (for login page display)
         [HttpGet("hr/accounts")]

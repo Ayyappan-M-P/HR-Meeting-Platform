@@ -717,6 +717,62 @@ private string GenerateMeetingId()
             }
         }
 
+        // Controllers/HRController.cs - Add this method
+        [HttpPost("interviews/{interviewId}/notes")]
+        public async Task<ActionResult<ApiResponseDto>> SaveInterviewNotes(int interviewId, [FromBody] InterviewNotesDto notesDto)
+        {
+            try
+            {
+                var interview = await _context.Interviews.FindAsync(interviewId);
+                
+                if (interview == null)
+                {
+                    return NotFound(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Interview not found"
+                    });
+                }
+
+                // Save notes as JSON in a new Notes column or separate table
+                var notesJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    notes = notesDto.Notes,
+                    quickNotes = notesDto.QuickNotes,
+                    ratings = notesDto.Ratings,
+                    savedAt = DateTime.UtcNow
+                });
+
+                // You can add a Notes column to Interview table or create separate InterviewNotes table
+                // For now, using InterviewLog to store notes
+                var noteLog = new InterviewLog
+                {
+                    InterviewId = interviewId,
+                    LogType = "notes",
+                    Message = notesJson,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                _context.InterviewLogs.Add(noteLog);
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Notes saved successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HR] Error saving notes: {ex.Message}");
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = "Failed to save notes"
+                });
+            }
+        }
+
         [HttpPost("scorecard/save")]
         public async Task<ActionResult<ApiResponseDto>> SaveScorecard([FromBody] ScorecardDto dto)
         {

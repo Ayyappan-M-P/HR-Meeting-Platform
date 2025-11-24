@@ -773,19 +773,58 @@ private string GenerateMeetingId()
             }
         }
 
+        // [HttpPost("scorecard/save")]
+        // public async Task<ActionResult<ApiResponseDto>> SaveScorecard([FromBody] ScorecardDto dto)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return BadRequest(new ApiResponseDto
+        //         {
+        //             Success = false,
+        //             Message = "Invalid input",
+        //             Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
+        //         });
+        //     }
+
+        //     var existing = await _context.Scorecards
+        //         .FirstOrDefaultAsync(s => s.InterviewId == dto.InterviewId);
+
+        //     if (existing != null)
+        //     {
+        //         existing.Communication = dto.Communication;
+        //         existing.Technical = dto.Technical;
+        //         existing.Coding = dto.Coding;
+        //         existing.Attitude = dto.Attitude;
+        //         existing.FinalDecision = dto.FinalDecision;
+        //         existing.Comments = dto.Comments;
+        //     }
+        //     else
+        //     {
+        //         var scorecard = new Scorecard
+        //         {
+        //             InterviewId = dto.InterviewId,
+        //             Communication = dto.Communication,
+        //             Technical = dto.Technical,
+        //             Coding = dto.Coding,
+        //             Attitude = dto.Attitude,
+        //             FinalDecision = dto.FinalDecision,
+        //             Comments = dto.Comments
+        //         };
+        //         _context.Scorecards.Add(scorecard);
+        //     }
+
+        //     await _context.SaveChangesAsync();
+            
+        //     return Ok(new ApiResponseDto
+        //     {
+        //         Success = true,
+        //         Message = "Scorecard saved successfully"
+        //     });
+        // }
+
         [HttpPost("scorecard/save")]
         public async Task<ActionResult<ApiResponseDto>> SaveScorecard([FromBody] ScorecardDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiResponseDto
-                {
-                    Success = false,
-                    Message = "Invalid input",
-                    Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-                });
-            }
-
             var existing = await _context.Scorecards
                 .FirstOrDefaultAsync(s => s.InterviewId == dto.InterviewId);
 
@@ -797,6 +836,8 @@ private string GenerateMeetingId()
                 existing.Attitude = dto.Attitude;
                 existing.FinalDecision = dto.FinalDecision;
                 existing.Comments = dto.Comments;
+                existing.Score = dto.Score;
+                existing.Notes = dto.Notes;
             }
             else
             {
@@ -808,19 +849,97 @@ private string GenerateMeetingId()
                     Coding = dto.Coding,
                     Attitude = dto.Attitude,
                     FinalDecision = dto.FinalDecision,
-                    Comments = dto.Comments
+                    Comments = dto.Comments,
+                    Score = dto.Score,
+                    Notes = dto.Notes
                 };
+
                 _context.Scorecards.Add(scorecard);
             }
 
             await _context.SaveChangesAsync();
-            
+
             return Ok(new ApiResponseDto
             {
                 Success = true,
                 Message = "Scorecard saved successfully"
             });
         }
+
+        // SAVE NOTES INTO SCORECARD (NEW)
+        [HttpPost("interviews/{interviewId}/save-meeting-notes")]
+        public async Task<ActionResult<ApiResponseDto>> SaveMeetingNotes(int interviewId, [FromBody] InterviewNotesDto dto)
+        {
+            try
+            {
+                var scorecard = await _context.Scorecards
+                    .FirstOrDefaultAsync(s => s.InterviewId == interviewId);
+
+                if (scorecard == null)
+                {
+                    scorecard = new Scorecard
+                    {
+                        InterviewId = interviewId,
+                        Notes = dto.Notes,
+                        Score = 0,
+                        Comments = "",
+                        Communication = 5,
+                        Technical = 5,
+                        Coding = 5,
+                        Attitude = 5,
+                        FinalDecision = "Pending"
+                    };
+
+                    _context.Scorecards.Add(scorecard);
+                }
+                else
+                {
+                    scorecard.Notes = dto.Notes;   // MAIN FIELD
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Meeting notes saved into scorecard."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = "Failed to save meeting notes",
+                    Errors = new List<string> { ex.Message }
+                });
+            }
+        }
+
+
+
+        // [HttpGet("scorecard/{interviewId}")]
+        // public async Task<ActionResult<ScorecardDto>> GetScorecard(int interviewId)
+        // {
+        //     var scorecard = await _context.Scorecards
+        //         .Where(s => s.InterviewId == interviewId)
+        //         .Select(s => new ScorecardDto
+        //         {
+        //             InterviewId = s.InterviewId,
+        //             Communication = s.Communication,
+        //             Technical = s.Technical,
+        //             Coding = s.Coding,
+        //             Attitude = s.Attitude,
+        //             FinalDecision = s.FinalDecision,
+        //             Comments = s.Comments
+        //         })
+        //         .FirstOrDefaultAsync();
+
+        //     if (scorecard == null)
+        //         return NotFound(new ApiResponseDto { Success = false, Message = "Scorecard not found" });
+
+        //     return Ok(scorecard);
+        // }
 
         [HttpGet("scorecard/{interviewId}")]
         public async Task<ActionResult<ScorecardDto>> GetScorecard(int interviewId)
@@ -835,7 +954,9 @@ private string GenerateMeetingId()
                     Coding = s.Coding,
                     Attitude = s.Attitude,
                     FinalDecision = s.FinalDecision,
-                    Comments = s.Comments
+                    Comments = s.Comments,
+                    Score = s.Score,
+                    Notes = s.Notes
                 })
                 .FirstOrDefaultAsync();
 
@@ -844,5 +965,6 @@ private string GenerateMeetingId()
 
             return Ok(scorecard);
         }
+
     }
 }
